@@ -1,29 +1,5 @@
+
 import { db } from "@/db";
-import { sql } from "drizzle-orm";
-
-export async function GET() {
-  try {
-    const result = await db.execute(sql`SELECT 1`);
-
-    return Response.json({
-      ok: true,
-      database: "connected",
-      result,
-    });
-  } catch (error) {
-    console.error("DB HEALTH ERROR:", error);
-
-    return Response.json(
-      {
-        ok: false,
-        database: "error",
-        error: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
-  }
-}
-/*import { db } from "@/db";
 import { gameResults } from "@/db/schema";
 import { asc, desc } from "drizzle-orm";
 import { NextRequest } from "next/server";
@@ -62,7 +38,7 @@ export async function POST(request: NextRequest) {
       .insert(gameResults)
       .values({ playerName, track, score, questionReached, durationSeconds })
       .returning();
-    return Response.json(result, { status: 201 });*/
+    return Response.json(result, { status: 201 });
   } catch {
     return Response.json({ error: "Не удалось сохранить результат" }, { status: 500 });
   }
