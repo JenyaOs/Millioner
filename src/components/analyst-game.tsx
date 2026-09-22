@@ -12,6 +12,7 @@ import {
   Database,
   Gauge,
   Medal,
+  HandCoins,
   Play,
   RefreshCcw,
   ShieldCheck,
@@ -259,6 +260,16 @@ export default function AnalystGame() {
             </div>
           )}
 
+          {phase === "playing" && (
+            <button
+              className="cash-out-button"
+              onClick={() => void completeGame(currentScore, currentScore > 0 ? "Вы вовремя остановились и забрали выигрыш" : "Вы решили завершить игру", index + 1)}
+            >
+              <HandCoins size={18} />
+              {currentScore > 0 ? `ЗАБРАТЬ ${currentScore} КОИНОВ` : "ЗАВЕРШИТЬ ИГРУ"}
+            </button>
+          )}
+
           <div className="lifeline-row">
             <span>ПОДСКАЗКИ</span>
             <Lifeline active={lifelines.fifty} onClick={useFifty} icon={<CircleHelp size={19} />} title="50 / 50" text="Убрать 2 ответа" />
@@ -302,14 +313,14 @@ function Lobby({ name, setName, track, setTrack, startGame, leaderboard }: { nam
 
           <div className="join-card">
             <label><span>КАК ВАС ЗОВУТ?</span><input value={name} maxLength={32} onChange={(event) => setName(event.target.value)} placeholder="Имя аналитика" /></label>
-            <div className="track-picker"><span>ВЫБЕРИТЕ СПЕЦИАЛИЗАЦИЮ</span><div>{(Object.keys(trackMeta) as Track[]).map((item) => { const Icon = trackIcons[item]; return <button key={item} className={track === item ? "active" : ""} onClick={() => setTrack(item)}><Icon size={19} /><b>{trackMeta[item].short}</b><small>{trackMeta[item].name.replace("-аналитик", "")}</small></button>; })}</div></div>
+            <div className="track-picker"><span>ВЫБЕРИТЕ СПЕЦИАЛИЗАЦИЮ</span><div>{(Object.keys(trackMeta) as Track[]).map((item) => { const Icon = trackIcons[item]; return <button key={item} className={track === item ? "active" : ""} onClick={() => setTrack(item)}><Icon size={19} /><b>{trackMeta[item].short}</b><small>{trackMeta[item].name}</small></button>; })}</div></div>
             <button className="start-button" disabled={name.trim().length < 2} onClick={startGame}><Play size={19} fill="currentColor" />НАЧАТЬ ИГРУ<span>15 вопросов · до 15 минут</span><ChevronRight /></button>
           </div>
         </div>
 
         <div className="leaderboard-card">
           <div className="board-title"><div><span><Trophy size={15} />ЛИДЕРБОРД</span><h2>ТОП АНАЛИТИКОВ</h2></div><small><i />ОБНОВЛЕНО</small></div>
-          <div className="board-tabs"><button className="active">ОБЩИЙ</button><button>ЭТОТ СЕЗОН</button></div>
+          <div className="board-tabs"><span>ОБЩИЙ РЕЙТИНГ · ЛУЧШИЙ РЕЗУЛЬТАТ ИГРОКА</span></div>
           <div className="board-list">
             {topRows.length ? topRows.map((row, rowIndex) => <div key={row.id} className={rowIndex < 3 ? `place-${rowIndex + 1}` : ""}><span className="rank">{rowIndex === 0 ? <Medal size={20} /> : String(rowIndex + 1).padStart(2, "0")}</span><span className="avatar">{row.playerName.slice(0, 2).toUpperCase()}</span><span className="player"><b>{row.playerName}</b><small>{trackMeta[row.track]?.name ?? row.track}</small></span><span className="coins"><b>{row.score.toLocaleString("ru-RU")}</b><small>COINS</small></span></div>) : <div className="empty-board"><Trophy size={28} /><b>Рейтинг ждёт первого чемпиона</b><span>Начните игру и займите верхнюю строчку</span></div>}
           </div>
