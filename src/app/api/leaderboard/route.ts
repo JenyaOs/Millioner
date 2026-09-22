@@ -1,6 +1,7 @@
+```ts
 import { db } from "@/db";
 import { gameResults } from "@/db/schema";
-import { asc, desc } from "drizzle-orm";
+import { asc, desc, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +10,63 @@ const validTracks = new Set(["business", "system", "data", "ml"]);
 
 export async function GET() {
   try {
-    const rows = await db
-      .select()
-      .from(gameResults)
-      .orderBy(desc(gameResults.score), asc(gameResults.durationSeconds))
-      .limit(50);
+    /*
+     * Для каждого игрока выбираем только его лучший результат:
+     *
+     * 1. Максимальный score
+     * 2. Если score одинаковый — минимальное время
+     * 3. Если и время одинаковое — более ранний результат
+     *
+     * DISTINCT ON работает в PostgreSQL.
+     */
+    const rows = await db.execute(sql`
+      SELECT DISTINCT ON (player_name)
+        id,
+        player_name,
+        track,
+        score,
+        question_reached,
+        duration_seconds,
+        created_at
+      FROM game_results
+      ORDER BY
+        player_name,
+        score DESC,
+        duration_seconds ASC,
+        created_at ASC
+    `);
 
-    return Response.json(rows);
+    /*
+     * DISTINCT ON сначала группирует записи по player_name,
+     * поэтому дополнительно сортируем уже готовый результат
+     * для отображения таблицы лидеров.
+     */
+    const leaderboard = rows.rows
+      .sort((a, b) => {
+        const scoreDiff = Number(b.score) - Number(a.score);
+
+        if (scoreDiff !== 0) {
+          return scoreDiff;
+        }
+
+        return (
+          Number(a.duration_seconds) -
+          Number(b.duration_seconds)
+        );
+      })
+      .slice(0, 50)
+      .map((row, index) => ({
+        place: index + 1,
+        id: row.id,
+        playerName: row.player_name,
+        track: row.track,
+        score: Number(row.score),
+        questionReached: Number(row.question_reached),
+        durationSeconds: Number(row.duration_seconds),
+        createdAt: row.created_at,
+      }));
+
+    return Response.json(leaderboard);
   } catch (error) {
     console.error("LEADERBOARD GET ERROR:", error);
 
@@ -85,3 +136,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+```
