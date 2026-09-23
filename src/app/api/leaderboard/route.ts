@@ -1,7 +1,6 @@
-```ts
 import { db } from "@/db";
 import { gameResults } from "@/db/schema";
-import { asc, desc, sql } from "drizzle-orm";
+import { asc, desc } from "drizzle-orm";
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -10,60 +9,38 @@ const validTracks = new Set(["business", "system", "data", "ml"]);
 
 export async function GET() {
   try {
-    /*
-     * Для каждого игрока выбираем только его лучший результат:
-     *
-     * 1. Максимальный score
-     * 2. Если score одинаковый — минимальное время
-     * 3. Если и время одинаковое — более ранний результат
-     *
-     * DISTINCT ON работает в PostgreSQL.
-     */
-    const rows = await db.execute(sql`
-      SELECT DISTINCT ON (player_name)
-        id,
-        player_name,
-        track,
-        score,
-        question_reached,
-        duration_seconds,
-        created_at
-      FROM game_results
-      ORDER BY
-        player_name,
-        score DESC,
-        duration_seconds ASC,
-        created_at ASC
-    `);
+    // Забираем результаты в нужном порядке.
+    // Для каждого игрока оставляем только первый результат.
+    const rows = await db
+      .select()
+      .from(gameResults)
+      .orderBy(
+        desc(gameResults.score),
+        asc(gameResults.durationSeconds),
+        asc(gameResults.createdAt),
+      );
 
-    /*
-     * DISTINCT ON сначала группирует записи по player_name,
-     * поэтому дополнительно сортируем уже готовый результат
-     * для отображения таблицы лидеров.
-     */
-    const leaderboard = rows.rows
-      .sort((a, b) => {
-        const scoreDiff = Number(b.score) - Number(a.score);
+    const uniquePlayers = new Map<string, (typeof rows)[number]>();
 
-        if (scoreDiff !== 0) {
-          return scoreDiff;
-        }
+    for (const row of rows) {
+      const playerKey = row.playerName.trim().toLowerCase();
 
-        return (
-          Number(a.duration_seconds) -
-          Number(b.duration_seconds)
-        );
-      })
+      if (!uniquePlayers.has(playerKey)) {
+        uniquePlayers.set(playerKey, row);
+      }
+    }
+
+    const leaderboard = Array.from(uniquePlayers.values())
       .slice(0, 50)
       .map((row, index) => ({
         place: index + 1,
         id: row.id,
-        playerName: row.player_name,
+        playerName: row.playerName,
         track: row.track,
-        score: Number(row.score),
-        questionReached: Number(row.question_reached),
-        durationSeconds: Number(row.duration_seconds),
-        createdAt: row.created_at,
+        score: row.score,
+        questionReached: row.questionReached,
+        durationSeconds: row.durationSeconds,
+        createdAt: row.createdAt,
       }));
 
     return Response.json(leaderboard);
@@ -136,4 +113,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-```
