@@ -66,7 +66,36 @@ button:disabled { cursor: default; }
 .board-title > small { color: #607482; font-size: 7px; letter-spacing: 1px; }
 .board-tabs { padding: 0 20px; height: 31px; border-bottom: 1px solid var(--line); display: flex; align-items: center; }
 .board-tabs span { color: #718490; font-size: 7px; letter-spacing: 1.1px; font-weight: 900; }
-.board-list { min-height: 230px; padding: 7px 0; }
+.board-list {
+  height: 230px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 7px 0;
+}
+
+/* Скроллбар leaderboard */
+.board-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.board-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.board-list::-webkit-scrollbar-thumb {
+  background: rgba(181, 238, 55, 0.35);
+  border-radius: 10px;
+}
+
+.board-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 238, 55, 0.65);
+}
+
+/* Firefox */
+.board-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(181, 238, 55, 0.35) transparent;
+}
 .board-list > div:not(.empty-board) { height: 44px; display: grid; grid-template-columns: 30px 34px 1fr auto; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(140,170,186,.07); gap: 10px; }
 .rank { color: #536977; font-weight: 800; font-size: 10px; }
 .place-1 .rank { color: var(--lime); }
