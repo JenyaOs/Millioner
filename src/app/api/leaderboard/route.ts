@@ -31,7 +31,6 @@ export async function GET() {
     }
 
     const leaderboard = Array.from(uniquePlayers.values())
-      .slice(0, 50)
       .map((row, index) => ({
         place: index + 1,
         id: row.id,
