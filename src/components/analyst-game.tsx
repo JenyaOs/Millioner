@@ -301,7 +301,7 @@ function Header({ compact = false, score = 0 }: { compact?: boolean; score?: num
 }
 
 function Lobby({ name, setName, track, setTrack, startGame, leaderboard }: { name: string; setName: (value: string) => void; track: Track; setTrack: (value: Track) => void; startGame: () => void; leaderboard: Result[] }) {
-  const topRows = leaderboard.slice(0, 5);
+  const topRows = leaderboard;
   return (
     <main className="lobby-shell">
       <Header />
